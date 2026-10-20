@@ -75,8 +75,11 @@ test('the fat star fills the frame', () => {
   assert.ok(Math.min(...xs) >= 0 && Math.max(...xs) <= UNIT, 'inside the frame');
 });
 
-test('the pages show the one hosted picture by its fixed name', () => {
-  assert.match(read('index.html'), /src="star-window\.svg"/);
-  assert.match(read('star-window-editor-20261019.html'), /star-window\.svg/);
+test('one page: the star, its pictures and placing a photo; the old editor link goes to it', () => {
+  const page = read('index.html');
+  for (const id of ['star', 'canvas', 'thumbs', 'capture', 'zoom', 'connect']) assert.match(page, new RegExp(`id="${id}"`), `the page has #${id}`);
+  assert.match(page, /star-window\.svg/, 'it names the hosted picture');
+  assert.match(page, /expires_in=366&amp;contents=write/, "the key link fills in GitHub's form");
+  assert.match(read('star-window-editor-20261019.html'), /http-equiv="refresh" content="0; url=\.\/"/);
   assert.match(read('README.md'), /https:\/\/findastra\.github\.io\/astras-star-window\/star-window\.svg/);
 });
