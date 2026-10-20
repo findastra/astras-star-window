@@ -1,0 +1,72 @@
+{
+  "window": "astras-star-window",
+  "title": "Astra's Star Window",
+  "seconds": 5,
+  "fade": 1.2,
+  "pictures": [
+    {
+      "id": "20261019-6mh8",
+      "file": "pictures/20261019-6mh8.jpg",
+      "alt": "Astra's avatar with long white hair over her eyes, a white feathered angel wing and a lace tattoo, in front of a wall of purple liquid chrome",
+      "added": "2026-10-19",
+      "photo": {
+        "name": "1-angel-wings.webp",
+        "width": 1920,
+        "height": 1080
+      },
+      "place": {
+        "x": 551.7,
+        "y": 844.8,
+        "zoom": 1.72414
+      }
+    },
+    {
+      "id": "20261019-21qm",
+      "file": "pictures/20261019-21qm.jpg",
+      "alt": "Astra's avatar winking through round glasses, white hair and freckles, against a purple starry sky",
+      "added": "2026-10-19",
+      "photo": {
+        "name": "2-glasses-in-space.webp",
+        "width": 1920,
+        "height": 1080
+      },
+      "place": {
+        "x": 468.8,
+        "y": 408.3,
+        "zoom": 1.04167
+      }
+    },
+    {
+      "id": "20261019-bbwh",
+      "file": "pictures/20261019-bbwh.jpg",
+      "alt": "Astra's avatar in cool blue light, eyes closed, with a glowing white halo ring behind her",
+      "added": "2026-10-19",
+      "photo": {
+        "name": "3-blue-halo.webp",
+        "width": 1920,
+        "height": 1080
+      },
+      "place": {
+        "x": 633.3,
+        "y": 444.8,
+        "zoom": 0.95238
+      }
+    },
+    {
+      "id": "20261019-p0fl",
+      "file": "pictures/20261019-p0fl.jpg",
+      "alt": "Astra's avatar with white hair and pale blue eyes under a full moon on a rainy night",
+      "added": "2026-10-19",
+      "photo": {
+        "name": "4-full-moon.webp",
+        "width": 1920,
+        "height": 1080
+      },
+      "place": {
+        "x": 540,
+        "y": 460,
+        "zoom": 1
+      }
+    }
+  ]
+}

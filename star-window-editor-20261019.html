@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Star Window Editor · Portfolio Puffer</title>
+<!--
+  Astra's Star Window editor: a tool of Portfolio Puffer (findastra/portfolio-puffer), named astras-star-window.
+  Put a photo behind the fat star, drag and zoom it until it sits right, then Capture: the picture is cut to the star's
+  frame and star-window.svg, star-window.json and the picture are committed to findastra/astras-star-window in one
+  commit, so every page that shows https://findastra.github.io/astras-star-window/star-window.svg shows the new star.
+  Saving needs Astra's own GitHub key for this one repo (fine-grained, Contents: read and write), kept in this browser
+  on this device only; without it, the update downloads as a zip. Original photos stay on the device (IndexedDB).
+  Built with Claude Opus 5.5 (claude-opus-5-5), 2026-10-19.
+-->
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:dark;font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;color:#ecebf0;background:#26272b;
+  --card:#303136;--line:#45464d;--muted:#a9a8b3;--pink:#ff5fd2;--violet:#b388ff;--cyan:#3ff3ff;--green:#46ff9a}
+body{margin:0;background:#26272b}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--cyan)}
+button,a,input,.stage{outline-offset:3px}
+:focus-visible{outline:2px solid var(--cyan)}
+.top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;padding:24px clamp(16px,4vw,48px) 8px;max-width:1280px;margin:auto}
+.puffer{width:64px;height:64px;image-rendering:pixelated;border:1px solid var(--line);border-radius:16px;background:radial-gradient(#3b3c43,#2b2c31)}
+.eyebrow{margin:0;font:600 11px/1.4 ui-monospace,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--pink)}
+h1{margin:2px 0 4px;font-size:clamp(24px,3.4vw,36px);letter-spacing:-.03em;line-height:1.15}
+.intro{margin:0;color:var(--muted);max-width:640px}
+.live{width:132px;height:auto;display:block}
+.live-wrap{text-align:center;font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;padding:16px clamp(16px,4vw,48px) 48px;max-width:1280px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.card h2{margin:0 0 12px;font-size:17px}
+.card h3{margin:18px 0 8px;font-size:14px;color:var(--muted);font-weight:600}
+.wide{grid-column:1/-1}
+.stage{position:relative;border-radius:14px;background:#1b1c1f;overflow:hidden;touch-action:pan-y;user-select:none;border:1px solid var(--line)}
+.stage.has-photo{touch-action:none;cursor:grab}
+.stage.dragging{cursor:grabbing}
+.stage canvas{display:block;width:100%}
+.stage-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;text-align:center;color:var(--muted);padding:20px;pointer-events:none}
+.stage.over{border-color:var(--cyan)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.button,.primary,.ghost{display:inline-flex;align-items:center;gap:6px;border-radius:11px;padding:9px 14px;border:1px solid var(--line);background:#3a3b41;font-weight:600}
+.primary{border:0;background:linear-gradient(135deg,var(--pink),var(--violet));color:#1b1020}
+.primary:disabled,.ghost:disabled{opacity:.4;cursor:default}
+.ghost{background:transparent}
+.zoom{display:flex;align-items:center;gap:8px;flex:1 1 200px;color:var(--muted);font-size:13px}
+.zoom input{flex:1;accent-color:var(--pink)}
+.field{display:block;margin-top:12px;font-size:13px;color:var(--muted)}
+.field input,.alt-input{display:block;width:100%;margin-top:4px;background:#26272b;border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.hint{font-size:12px;color:var(--muted);margin:10px 0 0}
+.editing{margin:0 0 10px;padding:8px 12px;border-radius:10px;background:#3b2c3d;border:1px solid #6b3f67;font-size:13px}
+ol.pics{list-style:none;margin:0;padding:0;counter-reset:pic}
+ol.pics li{counter-increment:pic;display:grid;grid-template-columns:22px 74px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+ol.pics li:last-child{border-bottom:0}
+ol.pics li::before{content:counter(pic);font:700 13px ui-monospace,Consolas,monospace;color:var(--pink);text-align:center}
+ol.pics li.moving{background:#3b2c3d;border-radius:10px}
+.thumb{width:74px;height:auto;display:block}
+.pic-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pic-actions button{font-size:12px;padding:4px 9px;border-radius:8px;border:1px solid var(--line);background:#3a3b41}
+.pic-actions .remove{color:#ff9db5}
+.pic-actions .remove.sure{background:#5a2333;border-color:#a03b58;color:#fff}
+.empty{color:var(--muted);text-align:center;padding:24px 0;margin:0}
+.preview{display:grid;place-items:center;background:#1b1c1f;border-radius:14px;padding:14px;border:1px solid var(--line)}
+.preview img{width:min(100%,260px);height:auto}
+.seconds{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:12px}
+.seconds input{width:80px;background:#26272b;border:1px solid var(--line);border-radius:9px;padding:6px 8px}
+.light{display:inline-block;width:10px;height:10px;border-radius:50%;background:#77767f;margin-right:6px;vertical-align:1px}
+.light.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+.light.off{background:#ff9db5}
+.key-form{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.key-form input{flex:1 1 260px;background:#26272b;border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+details.how{margin-top:12px;font-size:14px}
+details.how summary{cursor:pointer;color:var(--cyan)}
+details.how ol{padding-left:22px;color:#d6d5dc}
+code{font:12px ui-monospace,Consolas,monospace;background:#26272b;border:1px solid var(--line);border-radius:6px;padding:1px 5px}
+.small{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:min(92vw,620px);background:#1b1c1f;border:1px solid var(--violet);border-radius:12px;padding:11px 16px;font-size:14px;box-shadow:0 6px 30px #0008;z-index:10}
+.toast.bad{border-color:#ff9db5}
+[hidden]{display:none!important}
+@media(max-width:860px){
+  .grid{grid-template-columns:1fr}
+  .top{grid-template-columns:auto minmax(0,1fr)}
+  .live-wrap{grid-column:1/-1;justify-self:start;display:flex;align-items:center;gap:10px}
+  .live{width:96px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <img class="puffer" src="https://raw.githubusercontent.com/findastra/astras-pet-os/main/art/frames/portfolio-puffer/happy.png" alt="Portfolio Puffer, happy" width="64" height="64">
+  <div>
+    <p class="eyebrow">Portfolio Puffer · tool · astras-star-window</p>
+    <h1>Astra's Star Window</h1>
+    <p class="intro">Put a photo in the fat star, drag it until it sits right, then Capture. Every page that shows the star shows the new one.</p>
+  </div>
+  <div class="live-wrap"><img class="live" id="live" alt="The star window as it is live now" width="132" height="126"><span>live now</span></div>
+</header>
+
+<main class="grid">
+  <section class="card" aria-labelledby="place-h">
+    <h2 id="place-h">Place a photo</h2>
+    <p class="editing" id="editing" hidden></p>
+    <div class="stage" id="stage" tabindex="0" role="application" aria-label="The fat star. Drag the photo to move it; arrow keys nudge it, plus and minus zoom.">
+      <canvas id="canvas"></canvas>
+      <p class="stage-empty" id="stage-empty">Choose a photo, or drop one here.</p>
+    </div>
+    <div class="row">
+      <label class="button" for="file">Choose a photo</label>
+      <input type="file" id="file" accept="image/*" hidden>
+      <label class="zoom">Zoom <input type="range" id="zoom" min="0" max="1000" value="500" disabled aria-label="Zoom"></label>
+      <button type="button" class="ghost" id="fit" disabled>Fit</button>
+    </div>
+    <label class="field">What's in it (read out to people who can't see the picture)
+      <input id="alt" maxlength="160" placeholder="Astra's avatar with white hair, under a full moon">
+    </label>
+    <div class="row">
+      <button type="button" class="primary" id="capture" disabled>Capture</button>
+      <button type="button" class="ghost" id="cancel" hidden>Stop moving this one</button>
+    </div>
+    <p class="hint">Drag to move · scroll or pinch to zoom · arrow keys nudge, + and − zoom. Only what is inside the star is kept.</p>
+  </section>
+
+  <section class="card" aria-labelledby="list-h">
+    <h2 id="list-h">In the star now <span class="small" id="count"></span></h2>
+    <ol class="pics" id="pics"></ol>
+    <p class="empty" id="pics-empty" hidden>No pictures yet. Capture one.</p>
+    <label class="seconds">Seconds each <input type="number" id="seconds" min="2" max="30" step="0.5" value="5"></label>
+    <div class="row">
+      <button type="button" class="primary" id="publish" disabled>Publish changes</button>
+      <button type="button" class="ghost" id="undo" hidden>Undo the last change</button>
+    </div>
+    <h3>Preview</h3>
+    <div class="preview"><img id="preview" alt="Preview of the star window with these pictures"></div>
+  </section>
+
+  <section class="card wide" aria-labelledby="gh-h">
+    <h2 id="gh-h">Saving to GitHub</h2>
+    <p id="key-status"><span class="light"></span>Checking…</p>
+    <form class="key-form" id="key-form" hidden>
+      <input type="password" id="key" autocomplete="off" spellcheck="false" placeholder="Paste your key for astras-star-window" aria-label="GitHub key for astras-star-window">
+      <button type="submit" class="button">Save the key on this device</button>
+    </form>
+    <div class="row" id="key-saved" hidden>
+      <button type="button" class="ghost" id="forget">Forget the key on this device</button>
+    </div>
+    <details class="how" id="how">
+      <summary>How to make the key (once per device)</summary>
+      <ol>
+        <li>Open <a id="key-link" href="https://github.com/settings/personal-access-tokens/new?name=astras-star-window&amp;description=Lets+Portfolio+Puffer%27s+star+window+editor+save+the+star&amp;target_name=findastra&amp;expires_in=365&amp;contents=write" target="_blank" rel="noopener noreferrer">GitHub's new fine-grained token page</a> (signed in as findastra).</li>
+        <li>Name it <code>astras-star-window</code> and pick when it runs out. When it does, this page says so and you make a new one.</li>
+        <li>Repository access: <b>Only select repositories</b>, then <code>findastra/astras-star-window</code>. Nothing else.</li>
+        <li>Repository permissions: <b>Contents: Read and write</b>. Leave every other permission alone.</li>
+        <li>Generate the token, copy it, paste it above and save.</li>
+      </ol>
+      <p class="small">The key stays in this browser on this device and is only sent to GitHub. It can change the files of this one repo and nothing else. Forget it here, or delete it on GitHub, whenever you like.</p>
+    </details>
+    <p class="small">No key on this device? Your changes still work here: <button type="button" class="ghost" id="download" disabled>Download the update (.zip)</button> and give it to an assistant, or unzip it into the repo.</p>
+  </section>
+</main>
+<p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+
+<script type="module">
+import { frame, buildSvg, coverPlace, drawPlaced } from './star-window-lib-20261019.js';
+
+const OWNER = 'findastra', REPO = 'astras-star-window', BRANCH = 'main';
+const SITE = `https://${OWNER}.github.io/${REPO}/`;
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const KEY_STORE = 'astras-star-window:github-key';
+const OUT_W = 600;          // captured pictures are this many pixels wide
+const MARGIN = 170;         // frame units of photo shown (dimmed) around the star while placing
+const F = frame();
+const $ = (s) => document.querySelector(s);
+const base = location.protocol.startsWith('http') ? new URL('./', location.href).href : SITE;
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
+
+let data = { window: REPO, title: "Astra's Star Window", seconds: 5, fade: 1.2, pictures: [] };
+let published = JSON.stringify(data);   // the data as it is on GitHub
+let publishedSha = null;                // git blob sha of star-window.json when loaded or last saved
+let undoTo = null;                      // the data before the last published change
+const urls = new Map();                 // picture id -> data: URL of the picture
+let photo = null;                       // { img, width, height, name, blob }
+let place = null;
+let moving = null;                      // id of the picture being moved, or null for a new one
+let key = null;
+
+// ---------- small helpers ----------
+let toastTimer;
+function say(text, bad = false) {
+  const t = $('#toast');
+  t.textContent = text; t.classList.toggle('bad', bad); t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, bad ? 12000 : 7000);
+}
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch { /* storage blocked */ } },
+};
+const utf8 = (s) => new TextEncoder().encode(s);
+function b64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); }
+const dataUrlBytes = (u) => Uint8Array.from(atob(u.slice(u.indexOf(',') + 1)), (c) => c.charCodeAt(0));
+async function gitSha(bytes) {
+  const head = utf8(`blob ${bytes.length}\0`), all = new Uint8Array(head.length + bytes.length);
+  all.set(head); all.set(bytes, head.length);
+  return [...new Uint8Array(await crypto.subtle.digest('SHA-1', all))].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+const json = (d) => `${JSON.stringify(d, null, 2)}\n`;
+const svgOf = (d) => buildSvg(d, d.pictures.map((p) => ({ href: urls.get(p.id), alt: p.alt })));
+const newId = () => `${today().replaceAll('-', '')}-${Math.random().toString(36).slice(2, 6)}`;
+
+// ---------- GitHub ----------
+class GhError extends Error { constructor(status, text) { super(`GitHub said ${status}`); this.status = status; this.text = text; } }
+async function gh(path, opts = {}) {
+  const r = await fetch(`${API}${path}`, { ...opts, cache: 'no-store', headers: {
+    Accept: opts.raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json', Authorization: `Bearer ${key}`,
+    'X-GitHub-Api-Version': '2022-11-28', ...(opts.body ? { 'Content-Type': 'application/json' } : {}) } });
+  if (!r.ok) throw new GhError(r.status, await r.text());
+  return opts.raw ? r : r.status === 204 ? null : r.json();
+}
+function ghProblem(e) {
+  if (!(e instanceof GhError)) return `Could not reach GitHub (${e.message}). Nothing was changed.`;
+  if (e.status === 401) return 'GitHub says the key is not valid any more (it may have run out). Make a new one below.';
+  if (e.status === 403 || e.status === 404) return 'The key cannot change astras-star-window. Give it Contents: Read and write on that repo only, then save it again.';
+  if (e.status === 409 || e.status === 422) return 'GitHub refused the save because the repo changed at the same moment. Reload the page and try again.';
+  return `GitHub said ${e.status}. Nothing was changed.`;
+}
+
+// One commit: the new or changed pictures, star-window.json and star-window.svg, and removed pictures deleted.
+async function commit(next, message) {
+  const ref = await gh(`/git/ref/heads/${BRANCH}`);
+  const head = await gh(`/git/commits/${ref.object.sha}`);
+  let current = null;
+  try { current = (await gh(`/contents/star-window.json?ref=${ref.object.sha}`)).sha; } catch (e) { if (!(e instanceof GhError && e.status === 404)) throw e; }
+  if (current !== publishedSha) {
+    throw Object.assign(new Error('changed elsewhere'), { elsewhere: true });
+  }
+  const before = new Map(JSON.parse(published).pictures.map((p) => [p.id, p]));
+  const files = [];
+  for (const p of next.pictures) if (!before.has(p.id)) files.push({ path: p.file, bytes: dataUrlBytes(urls.get(p.id)) });
+  const jsonText = json(next);
+  files.push({ path: 'star-window.json', bytes: utf8(jsonText) }, { path: 'star-window.svg', bytes: utf8(svgOf(next)) });
+  const tree = [];
+  for (const f of files) {
+    const blob = await gh('/git/blobs', { method: 'POST', body: JSON.stringify({ content: b64(f.bytes), encoding: 'base64' }) });
+    tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
+  const keep = new Set(next.pictures.map((p) => p.file));
+  for (const p of before.values()) if (!keep.has(p.file)) tree.push({ path: p.file, mode: '100644', type: 'blob', sha: null });
+  const t = await gh('/git/trees', { method: 'POST', body: JSON.stringify({ base_tree: head.tree.sha, tree }) });
+  const c = await gh('/git/commits', { method: 'POST', body: JSON.stringify({ message, tree: t.sha, parents: [ref.object.sha] }) });
+  await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: c.sha }) });
+  publishedSha = await gitSha(utf8(jsonText));
+  return c.sha;
+}
+
+async function publish(message) {
+  render();
+  if (!key) { say('Captured here. To put it live, save your GitHub key below, or download the update.'); return false; }
+  const before = published;
+  $('#publish').disabled = true;
+  say('Saving to GitHub…');
+  try {
+    const sha = await commit(data, `${message} (Portfolio Puffer's star window editor)`);
+    undoTo = before;
+    published = JSON.stringify(data);
+    data = JSON.parse(published);
+    say(`Saved (${sha.slice(0, 7)}). The star updates on its site in about a minute; GitHub's own pages can take up to 10 minutes to stop showing the old one.`);
+    $('#live').src = `${base}star-window.svg?v=${Date.now()}`;
+    return true;
+  } catch (e) {
+    say(e.elsewhere ? 'The star was changed somewhere else since this page opened. Reload the page to get it, then capture again.' : ghProblem(e), true);
+    return false;
+  } finally { render(); }
+}
+
+async function loadKey(candidate = store.get(KEY_STORE)) {
+  key = candidate || null;
+  if (!key) return showKey('off', 'Off on this device: captures stay here until you save a key.');
+  try {
+    await gh('');
+    showKey('on', 'On: captures go live by themselves.');
+  } catch (e) {
+    key = null;
+    showKey('off', e instanceof GhError ? ghProblem(e) : 'Could not reach GitHub to check the key.');
+  }
+}
+function showKey(state, text) {
+  const p = $('#key-status');
+  p.textContent = '';
+  const l = document.createElement('span'); l.className = `light ${state}`; p.append(l, text);
+  $('#key-form').hidden = state === 'on';
+  $('#key-saved').hidden = !store.get(KEY_STORE);
+  if (state !== 'on') $('#how').open = true;
+}
+
+// ---------- loading what is live ----------
+async function load() {
+  let text = null;
+  try {
+    if (key) text = await (await gh(`/contents/star-window.json?ref=${BRANCH}`, { raw: true })).text();
+    else { const r = await fetch(`${base}star-window.json?v=${Date.now()}`, { cache: 'no-store' }); if (r.ok) text = await r.text(); }
+  } catch (e) { if (!(e instanceof GhError && e.status === 404)) say('Could not load the live star. You can still capture; reload before publishing.', true); }
+  if (text) {
+    data = JSON.parse(text);
+    publishedSha = await gitSha(utf8(text));
+    published = JSON.stringify(data);
+    await Promise.all(data.pictures.map(async (p) => {
+      try {
+        const r = key ? await gh(`/contents/${p.file}?ref=${BRANCH}`, { raw: true }) : await fetch(`${base}${p.file}?v=${Date.now()}`, { cache: 'no-store' });
+        urls.set(p.id, `data:image/jpeg;base64,${b64(new Uint8Array(await r.arrayBuffer()))}`);
+      } catch { say(`Could not load ${p.file}.`, true); }
+    }));
+  }
+  $('#live').src = `${base}star-window.svg?v=${Date.now()}`;
+  render();
+}
+
+// ---------- originals, kept on this device so a picture can be moved later ----------
+const idb = () => new Promise((res, rej) => {
+  const r = indexedDB.open('astras-star-window', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('photos');
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});
+async function keepOriginal(id, blob, name) {
+  try { const db = await idb(); db.transaction('photos', 'readwrite').objectStore('photos').put({ blob, name }, id); } catch { /* storage blocked: moving later needs the photo again */ }
+}
+async function original(id) {
+  try {
+    const db = await idb();
+    return await new Promise((res) => { const q = db.transaction('photos').objectStore('photos').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); });
+  } catch { return null; }
+}
+
+// ---------- the stage ----------
+const stage = $('#stage'), canvas = $('#canvas'), ctx = canvas.getContext('2d');
+const starPath = new Path2D(F.path);
+const outside = new Path2D(`M${-MARGIN} ${-MARGIN}H${F.width + MARGIN}V${F.height + MARGIN}H${-MARGIN}Z${F.path}`);
+const view = () => { const w = stage.clientWidth || 600; const k = w / (F.width + 2 * MARGIN); return { w, h: (F.height + 2 * MARGIN) * k, k }; };
+let zoomMin = 0.1, zoomMax = 10;
+
+function draw() {
+  const { w, h, k } = view(), dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.height = `${h}px`;
+  }
+  ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * k * MARGIN, dpr * k * MARGIN);
+  ctx.fillStyle = '#1b1c1f'; ctx.fillRect(-MARGIN, -MARGIN, F.width + 2 * MARGIN, F.height + 2 * MARGIN);
+  ctx.fillStyle = '#26272b'; ctx.fill(starPath);
+  if (photo) {
+    const pw = photo.width * place.zoom, ph = photo.height * place.zoom;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(photo.img, place.x - pw / 2, place.y - ph / 2, pw, ph);
+  }
+  ctx.fillStyle = 'rgba(22,22,26,.72)'; ctx.fill(outside, 'evenodd');
+  const g = ctx.createLinearGradient(0, 0, F.width, F.height);
+  g.addColorStop(0, '#ff5fd2'); g.addColorStop(0.5, '#b388ff'); g.addColorStop(1, '#3ff3ff');
+  ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(starPath);
+}
+
+const sliderOf = (z) => Math.round((Math.log(z / zoomMin) / Math.log(zoomMax / zoomMin)) * 1000);
+function setZoom(z, at = { x: F.width / 2, y: F.height / 2 }) {
+  const nz = Math.min(zoomMax, Math.max(zoomMin, z)), f = nz / place.zoom;
+  place.x = at.x + (place.x - at.x) * f; place.y = at.y + (place.y - at.y) * f; place.zoom = nz;
+  $('#zoom').value = sliderOf(nz);
+  draw();
+}
+function framePoint(e) {
+  const r = stage.getBoundingClientRect(), { k } = view();
+  return { x: (e.clientX - r.left) / k - MARGIN, y: (e.clientY - r.top) / k - MARGIN };
+}
+
+const pointers = new Map();
+stage.addEventListener('pointerdown', (e) => {
+  if (!photo) return;
+  stage.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); stage.classList.add('dragging');
+});
+stage.addEventListener('pointermove', (e) => {
+  const prev = pointers.get(e.pointerId);
+  if (!prev || !photo) return;
+  const { k } = view();
+  if (pointers.size === 1) {
+    place.x += (e.clientX - prev.x) / k; place.y += (e.clientY - prev.y) / k;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); draw();
+    return;
+  }
+  const [a, b] = [...pointers.values()];
+  const before = Math.hypot(a.x - b.x, a.y - b.y);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const [c, d] = [...pointers.values()];
+  const after = Math.hypot(c.x - d.x, c.y - d.y);
+  const mid = framePoint({ clientX: (c.x + d.x) / 2, clientY: (c.y + d.y) / 2 });
+  place.x += ((c.x + d.x) / 2 - (a.x + b.x) / 2) / k; place.y += ((c.y + d.y) / 2 - (a.y + b.y) / 2) / k;
+  if (before > 0) setZoom(place.zoom * (after / before), mid); else draw();
+});
+const lift = (e) => { pointers.delete(e.pointerId); if (!pointers.size) stage.classList.remove('dragging'); };
+stage.addEventListener('pointerup', lift); stage.addEventListener('pointercancel', lift);
+stage.addEventListener('wheel', (e) => { if (!photo) return; e.preventDefault(); setZoom(place.zoom * Math.exp(-e.deltaY * 0.0015), framePoint(e)); }, { passive: false });
+stage.addEventListener('keydown', (e) => {
+  if (!photo) return;
+  const step = e.shiftKey ? 40 : 10;
+  const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+  if (moves[e.key]) { place.x += moves[e.key][0]; place.y += moves[e.key][1]; draw(); e.preventDefault(); }
+  else if (e.key === '+' || e.key === '=') { setZoom(place.zoom * 1.08); e.preventDefault(); }
+  else if (e.key === '-' || e.key === '_') { setZoom(place.zoom / 1.08); e.preventDefault(); }
+});
+$('#zoom').addEventListener('input', (e) => setZoom(zoomMin * (zoomMax / zoomMin) ** (e.target.value / 1000)));
+$('#fit').onclick = () => { if (!photo) return; place = coverPlace(photo.width, photo.height); $('#zoom').value = sliderOf(place.zoom); draw(); };
+new ResizeObserver(draw).observe(stage);
+
+// ---------- photos in ----------
+async function usePhoto(blob, name, savedPlace = null) {
+  if (!blob || !/^image\//.test(blob.type)) { say('That is not a picture. Choose a PNG, JPG or WebP.', true); return; }
+  let img;
+  try { img = await createImageBitmap(blob); } catch { say('This browser could not open that picture.', true); return; }
+  photo = { img, width: img.width, height: img.height, name: name || 'photo', blob };
+  const cover = coverPlace(img.width, img.height);
+  zoomMin = cover.zoom * 0.25; zoomMax = cover.zoom * 8;
+  place = savedPlace && savedPlace.zoom ? { ...savedPlace } : cover;
+  $('#zoom').value = sliderOf(place.zoom);
+  $('#stage-empty').hidden = true; stage.classList.add('has-photo');
+  ['#zoom', '#fit', '#capture'].forEach((s) => { $(s).disabled = false; });
+  draw();
+  stage.focus({ preventScroll: true });
+}
+$('#file').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const p = moving && data.pictures.find((x) => x.id === moving);
+  const same = p && p.photo && p.photo.name === f.name;
+  await usePhoto(f, f.name, same ? p.place : null);
+  if (p && !same) say('That is a different photo from the one this picture came from, so it starts centred.');
+});
+stage.addEventListener('dragover', (e) => { e.preventDefault(); stage.classList.add('over'); });
+stage.addEventListener('dragleave', () => stage.classList.remove('over'));
+stage.addEventListener('drop', (e) => { e.preventDefault(); stage.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) usePhoto(f, f.name); });
+document.addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find((x) => x.type.startsWith('image/')); if (f) usePhoto(f, f.name || 'pasted photo'); });
+
+// ---------- capture ----------
+function cut() {
+  const c = document.createElement('canvas');
+  c.width = OUT_W; c.height = Math.round((F.height * OUT_W) / F.width);
+  drawPlaced(c.getContext('2d'), photo.img, photo.width, photo.height, place, OUT_W);
+  return c.toDataURL('image/jpeg', 0.86);
+}
+const r1 = (n) => Math.round(n * 10) / 10;
+async function capture({ publishNow = true } = {}) {
+  if (!photo) return null;
+  const alt = $('#alt').value.trim() || "Astra's avatar";
+  const placed = { x: r1(place.x), y: r1(place.y), zoom: Math.round(place.zoom * 100000) / 100000 };
+  const was = moving && data.pictures.find((p) => p.id === moving);
+  const id = newId();   // a new file every time: published pictures never change, so Undo can put an old one back
+  urls.set(id, cut());
+  const entry = { id, file: `pictures/${id}.jpg`, alt, added: was ? was.added : today(), ...(was ? { changed: today() } : {}),
+    photo: { name: photo.name, width: photo.width, height: photo.height }, place: placed };
+  if (was) data.pictures[data.pictures.indexOf(was)] = entry; else data.pictures.push(entry);
+  await keepOriginal(id, photo.blob, photo.name);
+  stopMoving();
+  if (publishNow) await publish(was ? `Star window: moved picture ${data.pictures.indexOf(entry) + 1}` : `Star window: added picture ${data.pictures.length}`);
+  else render();
+  return id;
+}
+$('#capture').onclick = () => capture();
+
+function stopMoving() {
+  moving = null; photo = null; place = null;
+  $('#editing').hidden = true; $('#cancel').hidden = true; $('#capture').textContent = 'Capture';
+  ['#zoom', '#fit', '#capture'].forEach((s) => { $(s).disabled = true; });
+  $('#stage-empty').hidden = false; stage.classList.remove('has-photo'); $('#alt').value = '';
+  draw(); render();
+}
+$('#cancel').onclick = stopMoving;
+
+async function startMoving(p) {
+  moving = p.id;
+  const n = data.pictures.indexOf(p) + 1;
+  $('#editing').textContent = `Moving picture ${n}. Capture replaces it.`;
+  $('#editing').hidden = false; $('#cancel').hidden = false; $('#capture').textContent = `Capture (replaces ${n})`;
+  $('#alt').value = p.alt || '';
+  const kept = await original(p.id);
+  if (kept) await usePhoto(kept.blob, kept.name, p.place);
+  else {
+    photo = null; stage.classList.remove('has-photo'); $('#stage-empty').hidden = false; draw();
+    $('#editing').textContent = `Moving picture ${n}. Its photo is not on this device: choose ${p.photo?.name ? `"${p.photo.name}"` : 'the photo'} again and it goes back where it was.`;
+  }
+  render();
+  stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ---------- the list ----------
+const NS = 'http://www.w3.org/2000/svg';
+function thumb(p, i) {
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('viewBox', `0 0 ${F.width} ${F.height}`); s.setAttribute('class', 'thumb'); s.setAttribute('role', 'img');
+  s.setAttribute('aria-label', p.alt || `picture ${i + 1}`);
+  const cp = document.createElementNS(NS, 'clipPath'); cp.id = `thumb-${i}`;
+  const path = document.createElementNS(NS, 'path'); path.setAttribute('d', F.path); cp.append(path);
+  const im = document.createElementNS(NS, 'image');
+  im.setAttribute('href', urls.get(p.id) || ''); im.setAttribute('width', F.width); im.setAttribute('height', F.height);
+  im.setAttribute('clip-path', `url(#thumb-${i})`); im.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+  const edge = document.createElementNS(NS, 'path'); edge.setAttribute('d', F.path); edge.setAttribute('fill', 'none');
+  edge.setAttribute('stroke', '#b388ff'); edge.setAttribute('stroke-width', '18');
+  s.append(cp, im, edge);
+  return s;
+}
+function button(text, cls, onclick) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; if (cls) b.className = cls; b.onclick = onclick; return b; }
+function move(i, by) { const j = i + by; if (j < 0 || j >= data.pictures.length) return; const [p] = data.pictures.splice(i, 1); data.pictures.splice(j, 0, p); render(); }
+
+let previewUrl = null;
+function render() {
+  const list = $('#pics'); list.textContent = '';
+  data.pictures.forEach((p, i) => {
+    const li = document.createElement('li'); if (p.id === moving) li.className = 'moving';
+    const body = document.createElement('div');
+    const alt = document.createElement('input'); alt.className = 'alt-input'; alt.value = p.alt || ''; alt.maxLength = 160;
+    alt.setAttribute('aria-label', `What's in picture ${i + 1}`);
+    alt.oninput = () => { p.alt = alt.value.trim(); dirty(); };
+    const acts = document.createElement('div'); acts.className = 'pic-actions';
+    const up = button('↑', '', () => move(i, -1)); up.disabled = i === 0; up.setAttribute('aria-label', `Move picture ${i + 1} earlier`);
+    const down = button('↓', '', () => move(i, 1)); down.disabled = i === data.pictures.length - 1; down.setAttribute('aria-label', `Move picture ${i + 1} later`);
+    const rm = button('Remove', 'remove', () => {
+      if (!rm.classList.contains('sure')) { rm.classList.add('sure'); rm.textContent = 'Really remove?'; return; }
+      data.pictures.splice(i, 1); if (moving === p.id) stopMoving(); render();
+    });
+    acts.append(up, down, button('Move in the star', '', () => startMoving(p)), rm);
+    body.append(alt, acts);
+    li.append(thumb(p, i), body);
+    list.append(li);
+  });
+  $('#pics-empty').hidden = data.pictures.length > 0;
+  $('#count').textContent = data.pictures.length ? `· ${data.pictures.length}` : '';
+  $('#seconds').value = data.seconds;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = URL.createObjectURL(new Blob([svgOf(data)], { type: 'image/svg+xml' }));
+  $('#preview').src = previewUrl;
+  dirty();
+}
+function dirty() {
+  const changed = JSON.stringify(data) !== published;
+  $('#publish').disabled = !changed || !key;
+  $('#download').disabled = !changed && !data.pictures.length;
+  $('#undo').hidden = !undoTo || changed;
+}
+$('#seconds').addEventListener('change', (e) => { data.seconds = Math.min(30, Math.max(2, Number(e.target.value) || 5)); render(); });
+$('#publish').onclick = () => publish('Star window: pictures changed');
+$('#undo').onclick = async () => {
+  if (!undoTo) return;
+  data = JSON.parse(undoTo);
+  if (await publish('Star window: undid the last change')) undoTo = null;
+  render();
+};
+
+// ---------- the zip, for a device with no key ----------
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = (b) => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function zip(files) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  let offset = 0;
+  const d = new Date(), dt = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dd = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const f of files) {
+    const name = enc.encode(f.name), data = f.data, crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);
+    h.setUint16(10, dt, true); h.setUint16(12, dd, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
+    h.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(h.buffer), name, data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+    c.setUint16(12, dt, true); c.setUint16(14, dd, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true);
+    c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
+    central.push(new Uint8Array(c.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const size = central.reduce((n, p) => n + p.length, 0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: 'application/zip' });
+}
+function updateFiles(d = data) {
+  const files = d.pictures.map((p) => ({ name: p.file, data: dataUrlBytes(urls.get(p.id)) }));
+  const gone = JSON.parse(published).pictures.map((p) => p.file).filter((f) => !d.pictures.some((p) => p.file === f));
+  files.push({ name: 'star-window.json', data: utf8(json(d)) }, { name: 'star-window.svg', data: utf8(svgOf(d)) });
+  files.push({ name: 'UPDATE.txt', data: utf8(`Astra's Star Window update from Portfolio Puffer's star window editor, ${today()}.\nUnzip into the root of findastra/astras-star-window, replacing the files with the same names.\n${gone.length ? `Then delete: ${gone.join(', ')}\n` : ''}Commit and push to main (by branch and pull request).\n`) });
+  return files;
+}
+$('#download').onclick = () => {
+  const a = document.createElement('a'), u = URL.createObjectURL(zip(updateFiles()));
+  a.href = u; a.download = `astras-star-window-${today().replaceAll('-', '')}.zip`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 1500);
+  say('Downloaded. UPDATE.txt inside says where the files go.');
+};
+
+// ---------- the key ----------
+$('#key-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const v = $('#key').value.trim();
+  if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(v)) { say('That does not look like a GitHub key. It starts with github_pat_.', true); return; }
+  $('#key').value = '';
+  if (!store.set(KEY_STORE, v)) say('This browser blocks saving, so the key is kept only until you close the page.', true);
+  await loadKey(v);
+  render();
+  if (!$('#key-form').hidden) return;
+  say('Key saved on this device. Captures now go live by themselves.');
+});
+$('#forget').onclick = async () => { store.del(KEY_STORE); key = null; await loadKey(); render(); say('Forgotten on this device. Delete it on GitHub too if you no longer need it.'); };
+
+// For checks and assistants (no key needed): the same steps the buttons take.
+globalThis.StarWindow = {
+  frame: F, usePhoto, capture, setPlace: (p) => { place = { ...p }; draw(); }, setAlt: (t) => { $('#alt').value = t; },
+  get data() { return JSON.parse(JSON.stringify(data)); }, files: () => updateFiles(), dataUrl: (id) => urls.get(id), svg: () => svgOf(data),
+};
+
+await loadKey();
+await load();
+draw();
+</script>
+</body>
+</html>
