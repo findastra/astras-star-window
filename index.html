@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Astra's Star Window</title>
+<meta name="description" content="A fat star that fades between Astra's favorite pictures of her avatar. One hosted picture: change it once, it changes everywhere.">
+<link rel="icon" href="star-window.svg" type="image/svg+xml">
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:dark;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;color:#ecebf0;background:#26272b;
+  --card:#303136;--line:#45464d;--muted:#a9a8b3;--pink:#ff5fd2;--violet:#b388ff;--cyan:#3ff3ff}
+body{margin:0;background:#26272b}
+main{max-width:860px;margin:auto;padding:32px 16px 48px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
+.eyebrow{margin:0;font:600 12px/1.4 ui-monospace,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--pink)}
+h1{margin:6px 0 10px;font-size:clamp(30px,6vw,48px);line-height:1.08;letter-spacing:-.03em}
+.lede{margin:0;color:#d6d5dc;max-width:460px}
+.star{width:min(300px,42vw);height:auto;display:block;filter:drop-shadow(0 0 22px #b388ff55)}
+h2{font-size:18px;margin:36px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:14px;color:var(--muted);font-weight:600}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;font:13px/1.5 ui-monospace,Consolas,monospace;color:#ecebf0;background:#26272b;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.copy{margin-top:8px;border:1px solid var(--line);background:#3a3b41;color:inherit;font:inherit;font-size:13px;font-weight:600;border-radius:9px;padding:6px 12px;cursor:pointer}
+.button{display:inline-block;border-radius:12px;padding:10px 16px;font-weight:650;text-decoration:none;color:#1b1020;background:linear-gradient(135deg,var(--pink),var(--violet))}
+a{color:var(--cyan)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.small{font-size:13px;color:var(--muted)}
+footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+@media(max-width:560px){.hero{grid-template-columns:1fr}.star{width:min(260px,80vw);margin:auto;grid-row:1}}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div>
+      <p class="eyebrow">astras-star-window</p>
+      <h1>Astra's Star Window</h1>
+      <p class="lede">A fat star that fades between my favorite pictures of my avatar. It is one hosted picture, so every page that shows it shows the same star, and when I change it here, it changes everywhere.</p>
+    </div>
+    <img class="star" src="star-window.svg" width="300" height="287" alt="Astra's Star Window: a fat star fading between pictures of Astra's avatar">
+  </section>
+
+  <h2>Put it on a page</h2>
+  <div class="card">
+    <h3>GitHub README or Markdown</h3>
+    <pre id="md">![Astra's Star Window](https://findastra.github.io/astras-star-window/star-window.svg)</pre>
+    <button class="copy" type="button" data-copy="md">Copy</button>
+  </div>
+  <div class="card">
+    <h3>HTML, floating to the right of a title</h3>
+    <pre id="html">&lt;img align="right" width="180" src="https://findastra.github.io/astras-star-window/star-window.svg" alt="Astra's Star Window"&gt;</pre>
+    <button class="copy" type="button" data-copy="html">Copy</button>
+  </div>
+  <p class="small">GitHub keeps a copy of pictures for a few minutes, so after a change a README can show the old star for up to about 10 minutes.</p>
+
+  <h2>Change the pictures</h2>
+  <p><a class="button" href="star-window-editor-20261019.html">Open the star window editor</a></p>
+  <p class="small">The editor is a tool of <a href="https://github.com/findastra/portfolio-puffer">Portfolio Puffer</a>. Upload a photo, drag it until it sits right in the star, and Capture. Saving needs Astra's own GitHub key for this repo.</p>
+
+  <footer>By Astra · <a href="https://github.com/findastra/astras-star-window">source on GitHub</a> · the code is MIT; the pictures are Astra's and not for reuse.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach((b) => {
+  b.addEventListener('click', async () => {
+    const text = document.getElementById(b.dataset.copy).textContent;
+    try { await navigator.clipboard.writeText(text); b.textContent = 'Copied'; } catch { b.textContent = 'Select it and copy'; }
+    setTimeout(() => { b.textContent = 'Copy'; }, 1800);
+  });
+});
+</script>
+</body>
+</html>

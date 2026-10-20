@@ -1,0 +1,11 @@
+{
+  "name": "astras-star-window",
+  "private": true,
+  "type": "module",
+  "description": "Astra's Star Window: one hosted picture of a fat star that fades between Astra's favorite photos of her avatar.",
+  "scripts": {
+    "build": "node scripts/build-star-window-20261019.mjs",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
