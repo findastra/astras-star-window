@@ -3,71 +3,418 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Astra's Star Window</title>
-<meta name="description" content="A fat star that fades between Astra's favorite pictures of her avatar. One hosted picture: change it once, it changes everywhere.">
+<title>Astra's Window Star</title>
+<meta name="description" content="Astra's Window Star: a fat star that fades between Astra's favorite pictures of her avatar. One hosted picture: change it here and it changes everywhere.">
 <link rel="icon" href="star-window.svg" type="image/svg+xml">
+<!--
+  Astra's Window Star (repo astras-star-window), one page: the star, its pictures, and placing a new photo right in
+  the star. Capture saves the picture, star-window.json and star-window.svg to findastra/astras-star-window in one
+  commit, with Astra's own GitHub key for this repo only, kept in this browser. Portfolio Puffer's tool; its pet
+  program page shows this page in a tool panel (?embed). By Astra. Built with Claude Opus 5.5 (claude-opus-5-5),
+  2026-10-20.
+-->
 <style>
 *{box-sizing:border-box}
-:root{color-scheme:dark;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;color:#ecebf0;background:#26272b;
-  --card:#303136;--line:#45464d;--muted:#a9a8b3;--pink:#ff5fd2;--violet:#b388ff;--cyan:#3ff3ff}
+:root{color-scheme:dark;font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#ecebf0;background:#26272b;
+  --card:#303136;--line:#45464d;--muted:#a9a8b3;--pink:#ff5fd2;--violet:#b388ff;--cyan:#3ff3ff;--green:#46ff9a}
 body{margin:0;background:#26272b}
-main{max-width:860px;margin:auto;padding:32px 16px 48px}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
-.eyebrow{margin:0;font:600 12px/1.4 ui-monospace,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--pink)}
-h1{margin:6px 0 10px;font-size:clamp(30px,6vw,48px);line-height:1.08;letter-spacing:-.03em}
-.lede{margin:0;color:#d6d5dc;max-width:460px}
-.star{width:min(300px,42vw);height:auto;display:block;filter:drop-shadow(0 0 22px #b388ff55)}
-h2{font-size:18px;margin:36px 0 10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
-.card h3{margin:0 0 8px;font-size:14px;color:var(--muted);font-weight:600}
-pre{margin:0;white-space:pre-wrap;word-break:break-all;font:13px/1.5 ui-monospace,Consolas,monospace;color:#ecebf0;background:#26272b;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.copy{margin-top:8px;border:1px solid var(--line);background:#3a3b41;color:inherit;font:inherit;font-size:13px;font-weight:600;border-radius:9px;padding:6px 12px;cursor:pointer}
-.button{display:inline-block;border-radius:12px;padding:10px 16px;font-weight:650;text-decoration:none;color:#1b1020;background:linear-gradient(135deg,var(--pink),var(--violet))}
+body.embed{background:transparent}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
 a{color:var(--cyan)}
-a:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
-.small{font-size:13px;color:var(--muted)}
-footer{margin-top:40px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
-@media(max-width:560px){.hero{grid-template-columns:1fr}.star{width:min(260px,80vw);margin:auto;grid-row:1}}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+main{max-width:460px;margin:0 auto;padding:22px 16px 28px}
+body.embed main{padding:8px 4px 12px}
+h1{margin:0 0 12px;font-size:24px;letter-spacing:-.02em;text-align:center}
+body.embed h1,body.embed .foot{display:none}
+.star{position:relative;border-radius:18px;background:#1b1c1f;border:1px solid var(--line);overflow:hidden;user-select:none;touch-action:pan-y}
+.star canvas{display:block;width:100%}
+.star .view{position:absolute;display:block;cursor:pointer}
+.star.placing{touch-action:none;cursor:grab}
+.star.placing.dragging{cursor:grabbing}
+.star.placing .view,.star:not(.placing) canvas{visibility:hidden}
+.star.over{border-color:var(--cyan)}
+.empty-hint{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:var(--muted);pointer-events:none;text-align:center;padding:20px}
+.status{text-align:center;color:var(--muted);font-size:13px;min-height:20px;margin:8px 0 2px}
+.status.good{color:var(--green)}
+.status.bad{color:#ff9db5}
+.thumbs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;list-style:none;margin:10px 0 0;padding:0}
+.thumbs li{position:relative}
+.thumbs svg{width:58px;height:auto;display:block}
+.thumbs .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#26272b;font-size:14px;line-height:1;padding:0}
+.add{width:58px;height:56px;border-radius:14px;border:1px dashed var(--violet);background:transparent;color:var(--violet);font-size:26px;line-height:1;display:grid;place-items:center}
+.placing-row{display:none;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.is-placing .placing-row{display:flex}
+.is-placing .thumbs{display:none}
+.zoom{flex:1 1 100%;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.zoom input{flex:1;accent-color:var(--pink)}
+.describe{flex:1 1 100%;background:#26272b;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.btn{border-radius:12px;padding:9px 16px;border:1px solid var(--line);background:#3a3b41;font-weight:600}
+.primary{border:0;background:linear-gradient(135deg,var(--pink),var(--violet));color:#1b1020;font-weight:700}
+.grow{flex:1}
+.connect-line{text-align:center;font-size:13px;color:var(--muted);margin:14px 0 0}
+.link{background:none;border:0;padding:0;color:var(--cyan);text-decoration:underline;font-size:inherit}
+.foot{margin-top:18px;text-align:center;font-size:12px;color:var(--muted)}
+.foot code{font-size:11px;word-break:break-all}
+dialog{max-width:min(92vw,400px);border:1px solid var(--violet);border-radius:16px;background:#303136;color:#ecebf0;padding:18px}
+dialog::backdrop{background:#0009}
+dialog h2{margin:0 0 10px;font-size:18px}
+dialog ol{margin:0;padding-left:20px}
+dialog li{margin-bottom:12px}
+dialog .key{width:100%;margin:6px 0;background:#26272b;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+dialog .small{font-size:12px;color:var(--muted);margin:6px 0 0}
+.go{display:inline-block;margin:4px 0;text-decoration:none}
+.toast{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);max-width:min(92vw,420px);background:#1b1c1f;border:1px solid var(--violet);border-radius:12px;padding:9px 14px;font-size:14px;z-index:10;display:flex;gap:12px;align-items:center}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
-<main>
-  <section class="hero">
-    <div>
-      <p class="eyebrow">astras-star-window</p>
-      <h1>Astra's Star Window</h1>
-      <p class="lede">A fat star that fades between my favorite pictures of my avatar. It is one hosted picture, so every page that shows it shows the same star, and when I change it here, it changes everywhere.</p>
-    </div>
-    <img class="star" src="star-window.svg" width="300" height="287" alt="Astra's Star Window: a fat star fading between pictures of Astra's avatar">
-  </section>
+<main id="app">
+  <h1>Astra's Window Star</h1>
 
-  <h2>Put it on a page</h2>
-  <div class="card">
-    <h3>GitHub README or Markdown</h3>
-    <pre id="md">![Astra's Star Window](https://findastra.github.io/astras-star-window/star-window.svg)</pre>
-    <button class="copy" type="button" data-copy="md">Copy</button>
+  <div class="star" id="star" tabindex="0" role="application" aria-label="The star. With a photo in it: drag to move it, arrow keys nudge it, plus and minus zoom.">
+    <canvas id="canvas"></canvas>
+    <img class="view" id="view" alt="Astra's Window Star with its pictures">
+    <p class="empty-hint" id="empty-hint" hidden>Tap + to add a photo</p>
   </div>
-  <div class="card">
-    <h3>HTML, floating to the right of a title</h3>
-    <pre id="html">&lt;img align="right" width="180" src="https://findastra.github.io/astras-star-window/star-window.svg" alt="Astra's Star Window"&gt;</pre>
-    <button class="copy" type="button" data-copy="html">Copy</button>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+  <ul class="thumbs" id="thumbs" aria-label="The pictures in the star"></ul>
+
+  <div class="placing-row">
+    <label class="zoom">Zoom <input type="range" id="zoom" min="0" max="1000" value="500" aria-label="Zoom"></label>
+    <input class="describe" id="describe" maxlength="160" placeholder="What's in it? (optional)" aria-label="What's in the picture">
+    <button type="button" class="btn" id="cancel">Cancel</button>
+    <button type="button" class="btn primary grow" id="capture">Capture</button>
   </div>
-  <p class="small">GitHub keeps a copy of pictures for a few minutes, so after a change a README can show the old star for up to about 10 minutes.</p>
+  <input type="file" id="file" accept="image/*" hidden>
 
-  <h2>Change the pictures</h2>
-  <p><a class="button" href="star-window-editor-20261019.html">Open the star window editor</a></p>
-  <p class="small">The editor is a tool of <a href="https://github.com/findastra/portfolio-puffer">Portfolio Puffer</a>. Upload a photo, drag it until it sits right in the star, and Capture. Saving needs Astra's own GitHub key for this repo.</p>
+  <p class="connect-line" id="connect-line"></p>
 
-  <footer>By Astra · <a href="https://github.com/findastra/astras-star-window">source on GitHub</a> · the code is MIT; the pictures are Astra's and not for reuse.</footer>
+  <div class="foot">
+    <p>The picture everyone sees: <code>https://findastra.github.io/astras-star-window/star-window.svg</code> <button type="button" class="link" id="copy">Copy</button></p>
+    <p>A tool of <a href="https://findastra.github.io/astras-pet-os/apps/pet-programs/portfolio-puffer-20261018.html">Portfolio Puffer</a> · By Astra</p>
+  </div>
 </main>
-<script>
-document.querySelectorAll('[data-copy]').forEach((b) => {
-  b.addEventListener('click', async () => {
-    const text = document.getElementById(b.dataset.copy).textContent;
-    try { await navigator.clipboard.writeText(text); b.textContent = 'Copied'; } catch { b.textContent = 'Select it and copy'; }
-    setTimeout(() => { b.textContent = 'Copy'; }, 1800);
-  });
+
+<dialog id="connect" aria-labelledby="connect-h">
+  <h2 id="connect-h">Connect GitHub (once on this device)</h2>
+  <ol>
+    <li><a class="btn primary go" target="_blank" rel="noopener noreferrer" href="https://github.com/settings/personal-access-tokens/new?name=astras-star-window&amp;description=Saves+Astra%27s+Window+Star&amp;target_name=findastra&amp;expires_in=366&amp;contents=write">Make a key on GitHub ↗</a>
+      <p class="small">There, choose <b>Only select repositories</b> → <b>astras-star-window</b>, then <b>Generate token</b> and copy it.</p></li>
+    <li><input class="key" id="key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste the key here" aria-label="Your GitHub key">
+      <button type="button" class="btn primary" id="connect-go">Connect</button></li>
+  </ol>
+  <p class="small">The key stays in this browser. It can only change this star.</p>
+  <p><button type="button" class="link" id="connect-close">Not now</button></p>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-text"></span><button type="button" class="link" id="toast-act" hidden></button></div>
+
+<script type="module">
+import { frame, buildSvg, coverPlace, drawPlaced } from './star-window-lib-20261019.js';
+
+const OWNER = 'findastra', REPO = 'astras-star-window', BRANCH = 'main';
+const SITE = `https://${OWNER}.github.io/${REPO}/`;
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const KEY_STORE = 'astras-star-window:github-key';
+const OUT_W = 600;          // captured pictures are this many pixels wide
+const M = 110;              // frame units around the star (photo shown dimmed there while placing)
+const F = frame();
+const $ = (s) => document.querySelector(s);
+const embed = new URLSearchParams(location.search).has('embed');
+document.body.classList.toggle('embed', embed);
+const base = location.protocol.startsWith('http') ? new URL('./', location.href).href : SITE;
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
+
+let data = { window: REPO, title: "Astra's Window Star", seconds: 5, fade: 1.2, pictures: [] };
+let published = JSON.stringify(data);   // the data as it is on GitHub
+let publishedSha = null;                // git blob sha of star-window.json when loaded or last saved
+const urls = new Map();                 // picture id -> data: URL
+let key = null;
+let photo = null, place = null;         // the photo being placed
+let pendingSave = null;                 // a save waiting for the key
+
+// ---------- small helpers ----------
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch { /* storage blocked */ } },
+};
+const utf8 = (s) => new TextEncoder().encode(s);
+function b64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); }
+const dataUrlBytes = (u) => Uint8Array.from(atob(u.slice(u.indexOf(',') + 1)), (c) => c.charCodeAt(0));
+async function gitSha(bytes) {
+  const head = utf8(`blob ${bytes.length}\0`), all = new Uint8Array(head.length + bytes.length);
+  all.set(head); all.set(bytes, head.length);
+  return [...new Uint8Array(await crypto.subtle.digest('SHA-1', all))].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+const json = (d) => `${JSON.stringify(d, null, 2)}\n`;
+const svgOf = (d) => buildSvg(d, d.pictures.map((p) => ({ href: urls.get(p.id), alt: p.alt })));
+const newId = () => `${today().replaceAll('-', '')}-${Math.random().toString(36).slice(2, 6)}`;
+
+function status(text, kind = '') { const s = $('#status'); s.textContent = text; s.className = `status ${kind}`; }
+let toastTimer;
+function toast(text, action = null) {
+  $('#toast-text').textContent = text;
+  const b = $('#toast-act'); b.hidden = !action;
+  if (action) { b.textContent = action.label; b.onclick = () => { $('#toast').hidden = true; action.run(); }; }
+  $('#toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('#toast').hidden = true; }, 8000);
+}
+
+// ---------- GitHub ----------
+class GhError extends Error { constructor(s) { super(`GitHub said ${s}`); this.status = s; } }
+async function gh(path, opts = {}) {
+  const r = await fetch(`${API}${path}`, { ...opts, cache: 'no-store', headers: {
+    Accept: opts.raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json', Authorization: `Bearer ${key}`,
+    'X-GitHub-Api-Version': '2022-11-28', ...(opts.body ? { 'Content-Type': 'application/json' } : {}) } });
+  if (!r.ok) throw new GhError(r.status);
+  return opts.raw ? r : r.status === 204 ? null : r.json();
+}
+function problem(e) {
+  if (e.elsewhere) return 'The star was changed somewhere else. Reload the page, then try again.';
+  if (!(e instanceof GhError)) return 'Could not reach GitHub. Nothing was changed.';
+  if (e.status === 401) return 'Your GitHub key ran out or was deleted. Connect again.';
+  if (e.status === 403 || e.status === 404) return 'That key can\'t change this star. Make it again and pick astras-star-window.';
+  return `GitHub said ${e.status}. Nothing was changed.`;
+}
+
+// One commit: new pictures, star-window.json and star-window.svg; pictures no longer used are deleted.
+async function commit(next, message) {
+  const ref = await gh(`/git/ref/heads/${BRANCH}`);
+  const head = await gh(`/git/commits/${ref.object.sha}`);
+  let current = null;
+  try { current = (await gh(`/contents/star-window.json?ref=${ref.object.sha}`)).sha; } catch (e) { if (!(e instanceof GhError && e.status === 404)) throw e; }
+  if (current !== publishedSha) throw Object.assign(new Error('changed elsewhere'), { elsewhere: true });
+  const before = new Map(JSON.parse(published).pictures.map((p) => [p.id, p]));
+  const files = next.pictures.filter((p) => !before.has(p.id)).map((p) => ({ path: p.file, bytes: dataUrlBytes(urls.get(p.id)) }));
+  const jsonText = json(next);
+  files.push({ path: 'star-window.json', bytes: utf8(jsonText) }, { path: 'star-window.svg', bytes: utf8(svgOf(next)) });
+  const tree = [];
+  for (const f of files) {
+    const blob = await gh('/git/blobs', { method: 'POST', body: JSON.stringify({ content: b64(f.bytes), encoding: 'base64' }) });
+    tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
+  const keep = new Set(next.pictures.map((p) => p.file));
+  for (const p of before.values()) if (!keep.has(p.file)) tree.push({ path: p.file, mode: '100644', type: 'blob', sha: null });
+  const t = await gh('/git/trees', { method: 'POST', body: JSON.stringify({ base_tree: head.tree.sha, tree }) });
+  const c = await gh('/git/commits', { method: 'POST', body: JSON.stringify({ message, tree: t.sha, parents: [ref.object.sha] }) });
+  await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: c.sha }) });
+  publishedSha = await gitSha(utf8(jsonText));
+  return c.sha;
+}
+
+// Save what the star shows now. Without a key, ask for one first and save right after.
+async function save(message) {
+  render();
+  if (!key) { pendingSave = message; openConnect(); status('Connect GitHub to save it.', ''); return false; }
+  status('Saving…');
+  try {
+    await commit(data, `${message} (Astra's Window Star, Portfolio Puffer's tool)`);
+    published = JSON.stringify(data);
+    status('Saved. It shows everywhere in about a minute.', 'good');
+    return true;
+  } catch (e) { status(problem(e), 'bad'); return false; }
+  finally { render(); }
+}
+
+// ---------- the key ----------
+async function useKey(candidate) {
+  key = candidate || null;
+  if (!key) return false;
+  try { await gh(''); return true; } catch (e) { key = null; status(problem(e), 'bad'); return false; }
+}
+function openConnect() { const d = $('#connect'); if (!d.open) d.showModal(); setTimeout(() => $('#key').focus(), 50); }
+$('#connect-close').onclick = () => { $('#connect').close(); const waiting = pendingSave; pendingSave = null; render(); if (waiting) status('Not saved yet. Connect GitHub to save it.'); };
+$('#connect-go').onclick = async () => {
+  const v = $('#key').value.trim();
+  if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(v)) { $('#key').setCustomValidity('A GitHub key starts with github_pat_'); $('#key').reportValidity(); return; }
+  $('#key').setCustomValidity('');
+  if (!(await useKey(v))) return;
+  store.set(KEY_STORE, v); $('#key').value = ''; $('#connect').close();
+  const waiting = pendingSave; pendingSave = null;
+  if (waiting) await save(waiting); else { status('Connected. Changes save by themselves.', 'good'); render(); }
+};
+function disconnect() { store.del(KEY_STORE); key = null; render(); status('Disconnected on this device.'); }
+
+// ---------- loading what is live ----------
+async function load() {
+  let text = null;
+  try {
+    if (key) text = await (await gh(`/contents/star-window.json?ref=${BRANCH}`, { raw: true })).text();
+    else { const r = await fetch(`${base}star-window.json?v=${Date.now()}`, { cache: 'no-store' }); if (r.ok) text = await r.text(); }
+  } catch (e) { if (!(e instanceof GhError && e.status === 404)) status('Could not load the star. Reload to try again.', 'bad'); }
+  if (text) {
+    data = JSON.parse(text);
+    publishedSha = await gitSha(utf8(text));
+    published = JSON.stringify(data);
+    await Promise.all(data.pictures.map(async (p) => {
+      try {
+        const r = key ? await gh(`/contents/${p.file}?ref=${BRANCH}`, { raw: true }) : await fetch(`${base}${p.file}?v=${Date.now()}`, { cache: 'no-store' });
+        urls.set(p.id, `data:image/jpeg;base64,${b64(new Uint8Array(await r.arrayBuffer()))}`);
+      } catch { /* shown as missing */ }
+    }));
+  }
+  render();
+}
+
+// ---------- the star: showing it, and placing a photo in it ----------
+const box = $('#star'), canvas = $('#canvas'), ctx = canvas.getContext('2d');
+const starPath = new Path2D(F.path);
+const outside = new Path2D(`M${-M} ${-M}H${F.width + M}V${F.height + M}H${-M}Z${F.path}`);
+const W = F.width + 2 * M, H = F.height + 2 * M;
+Object.assign($('#view').style, { left: `${(M / W) * 100}%`, top: `${(M / H) * 100}%`, width: `${(F.width / W) * 100}%`, height: `${(F.height / H) * 100}%` });
+const view = () => { const w = box.clientWidth || 400; const k = w / W; return { w, h: H * k, k }; };
+let zoomMin = 0.1, zoomMax = 10;
+
+function draw() {
+  const { w, h, k } = view(), dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.height = `${h}px`; }
+  ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * k * M, dpr * k * M);
+  ctx.fillStyle = '#1b1c1f'; ctx.fillRect(-M, -M, W, H);
+  ctx.fillStyle = '#26272b'; ctx.fill(starPath);
+  if (photo) { const pw = photo.width * place.zoom, ph = photo.height * place.zoom; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(photo.img, place.x - pw / 2, place.y - ph / 2, pw, ph); }
+  ctx.fillStyle = 'rgba(22,22,26,.72)'; ctx.fill(outside, 'evenodd');
+  const g = ctx.createLinearGradient(0, 0, F.width, F.height);
+  g.addColorStop(0, '#ff5fd2'); g.addColorStop(0.5, '#b388ff'); g.addColorStop(1, '#3ff3ff');
+  ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(starPath);
+}
+const sliderOf = (z) => Math.round((Math.log(z / zoomMin) / Math.log(zoomMax / zoomMin)) * 1000);
+function setZoom(z, at = { x: F.width / 2, y: F.height / 2 }) {
+  const nz = Math.min(zoomMax, Math.max(zoomMin, z)), f = nz / place.zoom;
+  place.x = at.x + (place.x - at.x) * f; place.y = at.y + (place.y - at.y) * f; place.zoom = nz;
+  $('#zoom').value = sliderOf(nz); draw();
+}
+function framePoint(e) { const r = box.getBoundingClientRect(), { k } = view(); return { x: (e.clientX - r.left) / k - M, y: (e.clientY - r.top) / k - M }; }
+
+const pointers = new Map();
+box.addEventListener('pointerdown', (e) => { if (!photo) return; box.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); box.classList.add('dragging'); });
+box.addEventListener('pointermove', (e) => {
+  const prev = pointers.get(e.pointerId);
+  if (!prev || !photo) return;
+  const { k } = view();
+  if (pointers.size === 1) { place.x += (e.clientX - prev.x) / k; place.y += (e.clientY - prev.y) / k; pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); draw(); return; }
+  const [a, b] = [...pointers.values()];
+  const before = Math.hypot(a.x - b.x, a.y - b.y);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const [c, d] = [...pointers.values()];
+  const after = Math.hypot(c.x - d.x, c.y - d.y);
+  place.x += ((c.x + d.x) / 2 - (a.x + b.x) / 2) / k; place.y += ((c.y + d.y) / 2 - (a.y + b.y) / 2) / k;
+  if (before > 0) setZoom(place.zoom * (after / before), framePoint({ clientX: (c.x + d.x) / 2, clientY: (c.y + d.y) / 2 })); else draw();
 });
+const lift = (e) => { pointers.delete(e.pointerId); if (!pointers.size) box.classList.remove('dragging'); };
+box.addEventListener('pointerup', lift); box.addEventListener('pointercancel', lift);
+box.addEventListener('wheel', (e) => { if (!photo) return; e.preventDefault(); setZoom(place.zoom * Math.exp(-e.deltaY * 0.0015), framePoint(e)); }, { passive: false });
+box.addEventListener('keydown', (e) => {
+  if (!photo) { if (e.key === 'Enter' || e.key === ' ') { $('#file').click(); e.preventDefault(); } return; }
+  const step = e.shiftKey ? 40 : 10, moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+  if (moves[e.key]) { place.x += moves[e.key][0]; place.y += moves[e.key][1]; draw(); e.preventDefault(); }
+  else if (e.key === '+' || e.key === '=') { setZoom(place.zoom * 1.08); e.preventDefault(); }
+  else if (e.key === '-' || e.key === '_') { setZoom(place.zoom / 1.08); e.preventDefault(); }
+  else if (e.key === 'Escape') stopPlacing();
+});
+$('#zoom').addEventListener('input', (e) => setZoom(zoomMin * (zoomMax / zoomMin) ** (e.target.value / 1000)));
+new ResizeObserver(draw).observe(box);
+
+// A photo goes straight into the star: tap the star or +, drop it on the star, or paste it.
+$('#view').addEventListener('click', () => $('#file').click());
+async function usePhoto(blob, name) {
+  if (!blob || !/^image\//.test(blob.type)) { toast('That is not a picture. Choose a PNG, JPG or WebP.'); return; }
+  let img;
+  try { img = await createImageBitmap(blob); } catch { toast('This browser could not open that picture.'); return; }
+  photo = { img, width: img.width, height: img.height, name: name || 'photo' };
+  place = coverPlace(img.width, img.height);
+  zoomMin = place.zoom * 0.25; zoomMax = place.zoom * 8;
+  $('#zoom').value = sliderOf(place.zoom); $('#describe').value = '';
+  box.classList.add('placing'); $('#app').classList.add('is-placing');
+  status('Drag it until it sits right. Scroll or pinch to zoom.');
+  draw(); box.focus({ preventScroll: true }); render();
+}
+function stopPlacing() {
+  photo = null; place = null;
+  box.classList.remove('placing'); $('#app').classList.remove('is-placing');
+  status(''); draw(); render();
+}
+$('#file').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) usePhoto(f, f.name); });
+box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('over'); });
+box.addEventListener('dragleave', () => box.classList.remove('over'));
+box.addEventListener('drop', (e) => { e.preventDefault(); box.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) usePhoto(f, f.name); });
+document.addEventListener('paste', (e) => { const f = [...(e.clipboardData?.files || [])].find((x) => x.type.startsWith('image/')); if (f) usePhoto(f, f.name || 'pasted photo'); });
+$('#cancel').onclick = stopPlacing;
+
+$('#capture').onclick = async () => {
+  if (!photo) return;
+  const c = document.createElement('canvas');
+  c.width = OUT_W; c.height = Math.round((F.height * OUT_W) / F.width);
+  drawPlaced(c.getContext('2d'), photo.img, photo.width, photo.height, place, OUT_W);
+  const id = newId();
+  urls.set(id, c.toDataURL('image/jpeg', 0.86));
+  const r1 = (n) => Math.round(n * 10) / 10;
+  data.pictures.push({ id, file: `pictures/${id}.jpg`, alt: $('#describe').value.trim() || "Astra's avatar", added: today(),
+    photo: { name: photo.name, width: photo.width, height: photo.height }, place: { x: r1(place.x), y: r1(place.y), zoom: Math.round(place.zoom * 100000) / 100000 } });
+  stopPlacing();
+  await save(`Window Star: added picture ${data.pictures.length}`);
+};
+
+// ---------- the pictures under the star ----------
+const NS = 'http://www.w3.org/2000/svg';
+function thumb(p) {
+  const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${F.width} ${F.height}`); s.setAttribute('aria-hidden', 'true');
+  const cp = document.createElementNS(NS, 'clipPath'); cp.id = `t-${p.id}`;
+  const path = document.createElementNS(NS, 'path'); path.setAttribute('d', F.path); cp.append(path);
+  const im = document.createElementNS(NS, 'image'); im.setAttribute('href', urls.get(p.id) || ''); im.setAttribute('width', F.width); im.setAttribute('height', F.height); im.setAttribute('clip-path', `url(#t-${p.id})`);
+  const edge = document.createElementNS(NS, 'path'); edge.setAttribute('d', F.path); edge.setAttribute('fill', 'none'); edge.setAttribute('stroke', '#b388ff'); edge.setAttribute('stroke-width', '22');
+  s.append(cp, im, edge);
+  return s;
+}
+async function remove(i) {
+  const before = JSON.stringify(data);
+  data.pictures.splice(i, 1);
+  if (await save(`Window Star: removed picture ${i + 1}`)) {
+    toast('Removed.', { label: 'Undo', run: async () => { data = JSON.parse(before); await save('Window Star: put a picture back'); } });
+  }
+}
+
+let viewUrl = null;
+function render() {
+  const list = $('#thumbs'); list.textContent = '';
+  data.pictures.forEach((p, i) => {
+    const li = document.createElement('li');
+    li.append(thumb(p));
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×';
+    x.setAttribute('aria-label', `Remove picture ${i + 1}: ${p.alt}`); x.onclick = () => remove(i);
+    li.append(x); list.append(li);
+  });
+  const add = document.createElement('li');
+  const plus = document.createElement('button'); plus.type = 'button'; plus.className = 'add'; plus.textContent = '+'; plus.setAttribute('aria-label', 'Add a photo');
+  plus.onclick = () => $('#file').click(); add.append(plus); list.append(add);
+  $('#empty-hint').hidden = data.pictures.length > 0 || !!photo;
+  if (viewUrl) URL.revokeObjectURL(viewUrl);
+  viewUrl = URL.createObjectURL(new Blob([svgOf(data)], { type: 'image/svg+xml' }));
+  $('#view').src = viewUrl;
+  const line = $('#connect-line'); line.textContent = '';
+  if (key) {
+    line.append('Saves to GitHub by itself · ');
+    const d = document.createElement('button'); d.type = 'button'; d.className = 'link'; d.textContent = 'Disconnect'; d.onclick = disconnect; line.append(d);
+  } else {
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'link'; c.textContent = 'Connect GitHub'; c.onclick = openConnect;
+    line.append(c, ' to save changes');
+  }
+  tellHeight();
+}
+
+// In a pet program's tool panel, tell the page how tall this is.
+// The content's own height (the page's scroll height never gets smaller than the frame it is in).
+function tellHeight() { if (embed && parent !== window) parent.postMessage({ type: 'tool-panel-height', height: Math.ceil($('#app').getBoundingClientRect().height) + 2 }, '*'); }
+if (embed) new ResizeObserver(tellHeight).observe($('#app'));
+
+$('#copy').onclick = async () => { try { await navigator.clipboard.writeText(`${SITE}star-window.svg`); toast('Copied the picture link.'); } catch { toast('Select the link and copy it.'); } };
+
+// For checks and assistants: the same steps the buttons take.
+globalThis.WindowStar = { frame: F, usePhoto, setPlace: (p) => { place = { ...p }; draw(); }, get data() { return JSON.parse(JSON.stringify(data)); }, svg: () => svgOf(data), dataUrl: (id) => urls.get(id) };
+
+await useKey(store.get(KEY_STORE));
+await load();
+draw();
 </script>
 </body>
 </html>
