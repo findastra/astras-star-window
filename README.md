@@ -1,4 +1,4 @@
-# Astra's Star Window
+# Astra's Window Star
 
 By Astra
 
