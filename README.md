@@ -15,13 +15,15 @@ It sits to the right of the title on [my GitHub profile](https://github.com/find
 ## Change the pictures
 
 Everything is on one page, and on [Portfolio Puffer's pet program](https://findastra.github.io/astras-pet-os/apps/pet-programs/portfolio-puffer-20261018.html)
-in its `astras-star-window` tool panel:
+in its own `astras-photostar-panel`:
 
 1. Tap **+** (or the star). Your photo appears in the big star.
 2. Drag it until it sits right. Scroll or pinch to zoom.
 3. **Capture.** It saves by itself and shows everywhere in about a minute.
 
 Tap **×** on a picture to take it out (**Undo** puts it back).
+
+The two colour squares at the start of the row are the neon border: pick two colours and it saves by itself. The star holds up to five pictures; take one out to add another.
 
 **The first time on a device, it asks you to connect GitHub:** tap **Make a key on GitHub**, choose **Only select
 repositories → astras-star-window**, tap **Generate token**, copy it, paste it, **Connect**. That's all. The key

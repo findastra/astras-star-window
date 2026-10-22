@@ -6,7 +6,8 @@ is always Astra ("By Astra"). Not a pet: Portfolio Puffer (findastra/portfolio-p
 Puffer's tool `astras-star-window`. Everything happens on the one page (Astra, 2026-10-20: "I want everything to be on
 the same page. And I want it to be intuitive and simple."); keep it that way.
 
-Built with Claude Opus 5.5 (`claude-opus-5-5`), 2026-10-19. Record the model and version when another assistant
+Built with Claude Opus 5.5 (`claude-opus-5-5`), 2026-10-19; the transparent background, closer small stars and the
+two neon border colours (`outline` in star-window.json) by Claude Opus 5.5, 2026-10-22. Record the model and version when another assistant
 changes this repository.
 
 ## Rules
