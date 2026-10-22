@@ -23,7 +23,7 @@ in its own `astras-photostar-panel`:
 
 Tap **×** on a picture to take it out (**Undo** puts it back).
 
-The two colour squares at the start of the row are the neon border: pick two colours and it saves by itself.
+The two colour squares at the start of the row are the neon border: pick two colours and it saves by itself. The star holds up to five pictures; take one out to add another.
 
 **The first time on a device, it asks you to connect GitHub:** tap **Make a key on GitHub**, choose **Only select
 repositories → astras-star-window**, tap **Generate token**, copy it, paste it, **Connect**. That's all. The key
