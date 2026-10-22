@@ -36,13 +36,16 @@ body.embed h1,body.embed .foot{display:none}
 .star.over{border-color:var(--cyan)}
 .empty-hint{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:var(--muted);pointer-events:none;text-align:center;padding:20px}
 .status{text-align:center;color:var(--muted);font-size:13px;min-height:20px;margin:8px 0 2px}
+.status:empty{min-height:0;margin:0}
 .status.good{color:var(--green)}
 .status.bad{color:#ff9db5}
 .thumbs{position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px;list-style:none;margin:calc(14px - var(--below, 40px)) 0 0;padding:0}
-.colors{display:grid;gap:4px;margin-right:6px}
-.colors input{width:30px;height:26px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}
-.colors input::-webkit-color-swatch-wrapper{padding:2px}
-.colors input::-webkit-color-swatch{border:0;border-radius:6px}
+.colors{display:grid;gap:2px;margin-right:4px}
+.swatch{position:relative;display:block;width:22px;height:21px;cursor:pointer}
+.thumbs .swatch svg{display:block;width:100%;height:100%;filter:drop-shadow(0 0 3px var(--c))}
+.swatch path{fill:var(--c);stroke:#ecebf0;stroke-width:28}
+.swatch input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:0}
+.swatch:focus-within{outline:2px solid var(--cyan);outline-offset:2px;border-radius:4px}
 .thumbs li{position:relative}
 .thumbs svg{width:58px;height:auto;display:block}
 .thumbs .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#26272b;font-size:14px;line-height:1;padding:0}
@@ -56,7 +59,7 @@ body.embed h1,body.embed .foot{display:none}
 .btn{border-radius:12px;padding:9px 16px;border:1px solid var(--line);background:#3a3b41;font-weight:600}
 .primary{border:0;background:linear-gradient(135deg,var(--pink),var(--violet));color:#1b1020;font-weight:700}
 .grow{flex:1}
-.connect-line{text-align:center;font-size:13px;color:var(--muted);margin:14px 0 0}
+.connect-line{text-align:center;font-size:13px;color:var(--muted);margin:6px 0 0}
 .link{background:none;border:0;padding:0;color:var(--cyan);text-decoration:underline;font-size:inherit}
 .foot{margin-top:18px;text-align:center;font-size:12px;color:var(--muted)}
 .foot code{font-size:11px;word-break:break-all}
@@ -394,12 +397,16 @@ function render() {
   const list = $('#thumbs'); list.textContent = '';
   const colors = document.createElement('li'); colors.className = 'colors';
   neonPair().forEach((c, i) => {
+    // A small star of the colour; the colour picker lies over it, so tapping the star opens it.
+    const sw = document.createElement('label'); sw.className = 'swatch'; sw.style.setProperty('--c', c);
+    const st = document.createElementNS(NS, 'svg'); st.setAttribute('viewBox', `0 0 ${F.width} ${F.height}`); st.setAttribute('aria-hidden', 'true');
+    const sp = document.createElementNS(NS, 'path'); sp.setAttribute('d', F.path); st.append(sp);
     const pick = document.createElement('input'); pick.type = 'color'; pick.value = c;
-    pick.setAttribute('aria-label', i ? 'Neon border, second colour' : 'Neon border, first colour'); pick.title = pick.getAttribute('aria-label');
+    pick.setAttribute('aria-label', i ? 'Neon border, second colour' : 'Neon border, first colour'); sw.title = pick.getAttribute('aria-label');
     // While choosing, the star shows the colour at once; letting go saves it.
-    pick.addEventListener('input', () => { const pair = neonPair(); pair[i] = pick.value; data.outline = pair; draw(); preview(); });
+    pick.addEventListener('input', () => { const pair = neonPair(); pair[i] = pick.value; data.outline = pair; sw.style.setProperty('--c', pick.value); draw(); preview(); });
     pick.addEventListener('change', () => save('Window Star: neon border colours'));
-    colors.append(pick);
+    sw.append(st, pick); colors.append(sw);
   });
   list.append(colors);
   data.pictures.forEach((p, i) => {
