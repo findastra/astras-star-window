@@ -18,7 +18,7 @@
 :root{color-scheme:dark;font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#ecebf0;background:#26272b;
   --card:#303136;--line:#45464d;--muted:#a9a8b3;--pink:#ff5fd2;--violet:#b388ff;--cyan:#3ff3ff;--green:#46ff9a}
 body{margin:0;background:#26272b}
-body.embed{background:transparent}
+:root:has(body.embed),body.embed{background:transparent}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 a{color:var(--cyan)}
@@ -27,7 +27,7 @@ main{max-width:460px;margin:0 auto;padding:22px 16px 28px}
 body.embed main{padding:8px 4px 12px}
 h1{margin:0 0 12px;font-size:24px;letter-spacing:-.02em;text-align:center}
 body.embed h1,body.embed .foot{display:none}
-.star{position:relative;border-radius:18px;background:#1b1c1f;border:1px solid var(--line);overflow:hidden;user-select:none;touch-action:pan-y}
+.star{position:relative;border-radius:18px;background:transparent;border:1px solid transparent;overflow:hidden;user-select:none;touch-action:pan-y}
 .star canvas{display:block;width:100%}
 .star .view{position:absolute;display:block;cursor:pointer}
 .star.placing{touch-action:none;cursor:grab}
@@ -38,7 +38,11 @@ body.embed h1,body.embed .foot{display:none}
 .status{text-align:center;color:var(--muted);font-size:13px;min-height:20px;margin:8px 0 2px}
 .status.good{color:var(--green)}
 .status.bad{color:#ff9db5}
-.thumbs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;list-style:none;margin:10px 0 0;padding:0}
+.thumbs{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px;list-style:none;margin:10px 0 0;padding:0}
+.colors{display:grid;gap:4px;margin-right:6px}
+.colors input{width:30px;height:26px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}
+.colors input::-webkit-color-swatch-wrapper{padding:2px}
+.colors input::-webkit-color-swatch{border:0;border-radius:6px}
 .thumbs li{position:relative}
 .thumbs svg{width:58px;height:auto;display:block}
 .thumbs .x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#26272b;font-size:14px;line-height:1;padding:0}
@@ -150,6 +154,10 @@ async function gitSha(bytes) {
 }
 const json = (d) => `${JSON.stringify(d, null, 2)}\n`;
 const svgOf = (d) => buildSvg(d, d.pictures.map((p) => ({ href: urls.get(p.id), alt: p.alt })));
+// The neon border: two colours (Astra, 2026-10-22). A star saved before then has three; its first and last stand in.
+const NEON = ['#ff5fd2', '#3ff3ff'];
+const neon = () => { const o = Array.isArray(data.outline) && data.outline.length ? data.outline : ['#ff5fd2', '#b388ff', '#3ff3ff']; return o; };
+const neonPair = () => { const o = neon(); return [o[0] || NEON[0], o[o.length - 1] || NEON[1]]; };
 const newId = () => `${today().replaceAll('-', '')}-${Math.random().toString(36).slice(2, 6)}`;
 
 function status(text, kind = '') { const s = $('#status'); s.textContent = text; s.className = `status ${kind}`; }
@@ -270,12 +278,12 @@ function draw() {
   const { w, h, k } = view(), dpr = window.devicePixelRatio || 1;
   if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.height = `${h}px`; }
   ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * k * M, dpr * k * M);
-  ctx.fillStyle = '#1b1c1f'; ctx.fillRect(-M, -M, W, H);
+  ctx.clearRect(-M, -M, W, H);
   ctx.fillStyle = '#26272b'; ctx.fill(starPath);
   if (photo) { const pw = photo.width * place.zoom, ph = photo.height * place.zoom; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(photo.img, place.x - pw / 2, place.y - ph / 2, pw, ph); }
   ctx.fillStyle = 'rgba(22,22,26,.72)'; ctx.fill(outside, 'evenodd');
   const g = ctx.createLinearGradient(0, 0, F.width, F.height);
-  g.addColorStop(0, '#ff5fd2'); g.addColorStop(0.5, '#b388ff'); g.addColorStop(1, '#3ff3ff');
+  const o = neon(); o.forEach((c, i) => g.addColorStop(o.length > 1 ? i / (o.length - 1) : 0, c));
   ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.lineJoin = 'round'; ctx.stroke(starPath);
 }
 const sliderOf = (z) => Math.round((Math.log(z / zoomMin) / Math.log(zoomMax / zoomMin)) * 1000);
@@ -362,7 +370,7 @@ function thumb(p) {
   const cp = document.createElementNS(NS, 'clipPath'); cp.id = `t-${p.id}`;
   const path = document.createElementNS(NS, 'path'); path.setAttribute('d', F.path); cp.append(path);
   const im = document.createElementNS(NS, 'image'); im.setAttribute('href', urls.get(p.id) || ''); im.setAttribute('width', F.width); im.setAttribute('height', F.height); im.setAttribute('clip-path', `url(#t-${p.id})`);
-  const edge = document.createElementNS(NS, 'path'); edge.setAttribute('d', F.path); edge.setAttribute('fill', 'none'); edge.setAttribute('stroke', '#b388ff'); edge.setAttribute('stroke-width', '22');
+  const edge = document.createElementNS(NS, 'path'); edge.setAttribute('d', F.path); edge.setAttribute('fill', 'none'); edge.setAttribute('stroke', neonPair()[0]); edge.setAttribute('stroke-width', '22');
   s.append(cp, im, edge);
   return s;
 }
@@ -375,8 +383,23 @@ async function remove(i) {
 }
 
 let viewUrl = null;
+function preview() {
+  if (viewUrl) URL.revokeObjectURL(viewUrl);
+  viewUrl = URL.createObjectURL(new Blob([svgOf(data)], { type: 'image/svg+xml' }));
+  $('#view').src = viewUrl;
+}
 function render() {
   const list = $('#thumbs'); list.textContent = '';
+  const colors = document.createElement('li'); colors.className = 'colors';
+  neonPair().forEach((c, i) => {
+    const pick = document.createElement('input'); pick.type = 'color'; pick.value = c;
+    pick.setAttribute('aria-label', i ? 'Neon border, second colour' : 'Neon border, first colour'); pick.title = pick.getAttribute('aria-label');
+    // While choosing, the star shows the colour at once; letting go saves it.
+    pick.addEventListener('input', () => { const pair = neonPair(); pair[i] = pick.value; data.outline = pair; draw(); preview(); });
+    pick.addEventListener('change', () => save('Window Star: neon border colours'));
+    colors.append(pick);
+  });
+  list.append(colors);
   data.pictures.forEach((p, i) => {
     const li = document.createElement('li');
     li.append(thumb(p));
@@ -388,9 +411,7 @@ function render() {
   const plus = document.createElement('button'); plus.type = 'button'; plus.className = 'add'; plus.textContent = '+'; plus.setAttribute('aria-label', 'Add a photo');
   plus.onclick = () => $('#file').click(); add.append(plus); list.append(add);
   $('#empty-hint').hidden = data.pictures.length > 0 || !!photo;
-  if (viewUrl) URL.revokeObjectURL(viewUrl);
-  viewUrl = URL.createObjectURL(new Blob([svgOf(data)], { type: 'image/svg+xml' }));
-  $('#view').src = viewUrl;
+  preview();
   const line = $('#connect-line'); line.textContent = '';
   if (key) {
     line.append('Saves to GitHub by itself · ');
