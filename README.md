@@ -1,4 +1,4 @@
-# Astra's Window Star
+# Astra's Star Window
 
 *By Astra.* A fat star that fades between my favorite pictures of my avatar. It is **one hosted picture**: every page
 that shows it shows the same star, and when I change it, it changes everywhere.
@@ -11,8 +11,8 @@ that shows it shows the same star, and when I change it, it changes everywhere.
 <th width="50%">Where I change it</th>
 </tr>
 <tr>
-<td width="50%" valign="top"><img src="star-window.svg" alt="Astra's Window Star: a fat star with a neon outline fading between pictures of Astra's avatar" width="100%"></td>
-<td width="50%" valign="top"><a href="https://findastra.github.io/astras-star-window/"><img src="docs/images/astras-star-window-page-20261029.png" alt="The Window Star page: the big star with Astra's avatar, the two neon border colours, the strip of five pictures with a plus to add one, and Connect GitHub" width="100%"></a></td>
+<td width="50%" valign="top"><img src="star-window.svg" alt="Astra's Star Window: a fat star with a neon outline fading between pictures of Astra's avatar" width="100%"></td>
+<td width="50%" valign="top"><a href="https://findastra.github.io/astras-star-window/"><img src="docs/images/astras-star-window-page-20261029.png" alt="The Star Window page: the big star with Astra's avatar, the two neon border colours, the strip of five pictures with a plus to add one, and Connect GitHub" width="100%"></a></td>
 </tr>
 </table>
 
@@ -42,7 +42,7 @@ stays in that browser and can only change this star.
 ## Show it on a page
 
 ```html
-<img align="right" width="180" src="https://findastra.github.io/astras-star-window/star-window.svg" alt="Astra's Window Star">
+<img align="right" width="180" src="https://findastra.github.io/astras-star-window/star-window.svg" alt="Astra's Star Window">
 ```
 
 Always use this address. It never changes, so changing the pictures never breaks a page.
