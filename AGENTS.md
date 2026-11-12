@@ -7,7 +7,8 @@ Puffer's tool `astras-star-window`. Everything happens on the one page (Astra, 2
 the same page. And I want it to be intuitive and simple."); keep it that way.
 
 Built with Claude Opus 5.5 (`claude-opus-5-5`), 2026-10-19; the transparent background, closer small stars and the
-two neon border colours (`outline` in star-window.json) by Claude Opus 5.5, 2026-10-22. Record the model and version when another assistant
+two neon border colours (`outline` in star-window.json) by Claude Opus 5.5, 2026-10-22; no backdrop and a smaller star in
+Puffer's tool box (`?embed`) by Claude Opus 5.5, 2026-11-11. Record the model and version when another assistant
 changes this repository.
 
 ## Rules

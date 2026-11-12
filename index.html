@@ -19,6 +19,14 @@
   --card:#303136;--line:#45464d;--muted:#a9a8b3;--pink:#ff5fd2;--violet:#b388ff;--cyan:#3ff3ff;--green:#46ff9a}
 body{margin:0;background:#26272b}
 :root:has(body.embed),body.embed{background:transparent}
+/* In a tool box the star sits right on the page, with no box behind it (Astra, 2026-11-11: "the window star is supposed
+   to be the star that sits on a page, and it doesn't have a background"). A dark color-scheme here and a normal one on
+   the page around it make the browser paint an opaque backdrop behind the frame, so the embed declares normal; every
+   colour on this page is set by hand anyway. Smaller there too ("It's kind of big"). */
+:root:has(body.embed){color-scheme:normal}
+body.embed main{max-width:320px}
+body.embed .thumbs svg{width:46px}
+body.embed .add{width:46px;height:44px;font-size:22px}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 a{color:var(--cyan)}
